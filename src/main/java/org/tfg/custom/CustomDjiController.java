@@ -1,8 +1,15 @@
-package org.tfg;
+package org.tfg.custom;
 
-import com.cyberbotics.webots.controller.*;
+import com.cyberbotics.webots.controller.Camera;
+import com.cyberbotics.webots.controller.Compass;
+import com.cyberbotics.webots.controller.GPS;
+import com.cyberbotics.webots.controller.Gyro;
+import com.cyberbotics.webots.controller.InertialUnit;
+import com.cyberbotics.webots.controller.Keyboard;
+import com.cyberbotics.webots.controller.LED;
+import com.cyberbotics.webots.controller.Motor;
 
-public class DjiControllerJava extends Robot {
+public class CustomDjiController extends CustomRobot {
 
     private final int timeStep = (int) getBasicTimeStep();
     private final Camera camera;
@@ -19,8 +26,9 @@ public class DjiControllerJava extends Robot {
     private final Motor rearLeftMotor;
     private final Motor rearRightMotor;
     private double targetAltitude = 1.0;
+    private double velocity = 1.0;
 
-    public DjiControllerJava() {
+    public CustomDjiController() {
         camera = getCamera("camera");
         camera.enable(timeStep);
         frontLeftLed = getLED("front left led");
@@ -39,34 +47,19 @@ public class DjiControllerJava extends Robot {
         frontRightMotor = getMotor("front right propeller");
         rearLeftMotor = getMotor("rear left propeller");
         rearRightMotor = getMotor("rear right propeller");
-
-        Motor[] motors = {frontLeftMotor, frontRightMotor, rearLeftMotor, rearRightMotor};
-        for (Motor motor : motors) {
-            motor.setPosition(Double.POSITIVE_INFINITY);
-            motor.setVelocity(1.0);
-        }
-
-        // Enable the keyboard
-        getKeyboard().enable(timeStep);
     }
 
+
     public void run() {
+
+        initMotors(velocity);
+        initKeyboard(timeStep);
+
         System.out.println("Start the drone...");
 
-        while (step(timeStep) != -1) {
-            if (getTime() > 1.0)
-                break;
-        }
+        waitBeforeStart();
 
-        System.out.println("You can control the drone with your computer keyboard:");
-        System.out.println("- 'up': move forward.");
-        System.out.println("- 'down': move backward.");
-        System.out.println("- 'right': turn right.");
-        System.out.println("- 'left': turn left.");
-        System.out.println("- 'shift + up': increase the target altitude.");
-        System.out.println("- 'shift + down': decrease the target altitude.");
-        System.out.println("- 'shift + right': strafe right.");
-        System.out.println("- 'shift + left': strafe left.");
+        printInstructions();
 
         final double kVerticalThrust = 68.5;
         final double kVerticalOffset = 0.6;
@@ -83,9 +76,7 @@ public class DjiControllerJava extends Robot {
             double rollVelocity = gyro.getValues()[0];
             double pitchVelocity = gyro.getValues()[1];
 
-            boolean ledState = ((int) time) % 2 == 0;
-            frontLeftLed.set(ledState ? 1 : 0);
-            frontRightLed.set(ledState ? 0 : 1);
+            setItermitentFrontalLeds((int) time);
 
             cameraRollMotor.setPosition(-0.115 * rollVelocity);
             cameraPitchMotor.setPosition(-0.1 * pitchVelocity);
@@ -143,12 +134,50 @@ public class DjiControllerJava extends Robot {
         }
     }
 
+    private void setItermitentFrontalLeds(int time) {
+        boolean ledState = time % 2 == 0;
+        frontLeftLed.set(ledState ? 1 : 0);
+        frontRightLed.set(ledState ? 0 : 1);
+    }
+
+    private static void printInstructions() {
+        System.out.println("You can control the drone with your computer keyboard:");
+        System.out.println("- 'up': move forward.");
+        System.out.println("- 'down': move backward.");
+        System.out.println("- 'right': turn right.");
+        System.out.println("- 'left': turn left.");
+        System.out.println("- 'shift + up': increase the target altitude.");
+        System.out.println("- 'shift + down': decrease the target altitude.");
+        System.out.println("- 'shift + right': strafe right.");
+        System.out.println("- 'shift + left': strafe left.");
+    }
+
+    private void waitBeforeStart() {
+        while (step(timeStep) != -1) {
+            if (getTime() > 1.0)
+                break;
+        }
+    }
+
+    public static void main(String[] args) {
+        CustomDjiController controller = new CustomDjiController();
+        controller.run();
+    }
+
     private double clamp(double value, double low, double high) {
         return Math.max(low, Math.min(value, high));
     }
 
-    public static void main(String[] args) {
-        DjiControllerJava controller = new DjiControllerJava();
-        controller.run();
+    private void initKeyboard(int timeStep) {
+        getKeyboard().enable(timeStep);
+    }
+
+    private void initMotors(double velocity) {
+        this.velocity = velocity;
+        Motor[] motors = {frontLeftMotor, frontRightMotor, rearLeftMotor, rearRightMotor};
+        for (Motor motor : motors) {
+            motor.setPosition(Double.POSITIVE_INFINITY);
+            motor.setVelocity(velocity);
+        }
     }
 }

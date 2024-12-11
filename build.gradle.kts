@@ -17,6 +17,10 @@ dependencies {
     // Dependencias de JUnit (solo si las estás utilizando para pruebas)
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+
+    // Dependencia de Lombok
+    compileOnly("org.projectlombok:lombok:1.18.28")
+    annotationProcessor("org.projectlombok:lombok:1.18.28")
 }
 
 application {
