@@ -1,9 +1,11 @@
-package org.tfg;
+package org.tfg.defaultControllers;
 
-import com.cyberbotics.webots.controller.*;
-import com.cyberbotics.webots.controller.vehicle.Car;
+import com.cyberbotics.webots.controller.Camera;
+import com.cyberbotics.webots.controller.LED;
+import com.cyberbotics.webots.controller.Motor;
+import com.cyberbotics.webots.controller.Robot;
 
-public class DjiController extends Robot{
+public class DjiController extends Robot {
 
     private int timeStep = 500;
     private Camera camera = getCamera("camera");
@@ -30,6 +32,7 @@ public class DjiController extends Robot{
 
         }
     }
+
     public static void main(String[] args) throws InterruptedException {
         new DjiController().run();
     }

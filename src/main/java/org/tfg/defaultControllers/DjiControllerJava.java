@@ -1,6 +1,14 @@
-package org.tfg;
+package org.tfg.defaultControllers;
 
-import com.cyberbotics.webots.controller.*;
+import com.cyberbotics.webots.controller.Camera;
+import com.cyberbotics.webots.controller.Compass;
+import com.cyberbotics.webots.controller.GPS;
+import com.cyberbotics.webots.controller.Gyro;
+import com.cyberbotics.webots.controller.InertialUnit;
+import com.cyberbotics.webots.controller.Keyboard;
+import com.cyberbotics.webots.controller.LED;
+import com.cyberbotics.webots.controller.Motor;
+import com.cyberbotics.webots.controller.Robot;
 
 public class DjiControllerJava extends Robot {
 
