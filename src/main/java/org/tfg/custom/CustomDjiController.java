@@ -1,7 +1,6 @@
 package org.tfg.custom;
 
 import com.cyberbotics.webots.controller.Camera;
-import com.cyberbotics.webots.controller.CameraRecognitionObject;
 import com.cyberbotics.webots.controller.Compass;
 import com.cyberbotics.webots.controller.GPS;
 import com.cyberbotics.webots.controller.Gyro;
@@ -9,27 +8,200 @@ import com.cyberbotics.webots.controller.InertialUnit;
 import com.cyberbotics.webots.controller.Keyboard;
 import com.cyberbotics.webots.controller.LED;
 import com.cyberbotics.webots.controller.Motor;
+import com.cyberbotics.webots.controller.Speaker;
+
+import java.util.HashSet;
+import java.util.Scanner;
+import java.util.Set;
 
 public class CustomDjiController extends CustomRobot {
 
+    private Camera camera;
+    private LED frontLeftLed;
+    private LED frontRightLed;
+    private InertialUnit imu;
+    private GPS gps;
+    private Compass compass;
+    private Gyro gyro;
+    private Motor cameraRollMotor;
+    private Motor cameraPitchMotor;
+    private Motor frontLeftMotor;
+    private Motor frontRightMotor;
+    private Motor rearLeftMotor;
+    private Motor rearRightMotor;
+    private Speaker speaker;
+
     private final int timeStep = (int) getBasicTimeStep();
-    private final Camera camera;
-    private final LED frontLeftLed;
-    private final LED frontRightLed;
-    private final InertialUnit imu;
-    private final GPS gps;
-    private final Compass compass;
-    private final Gyro gyro;
-    private final Motor cameraRollMotor;
-    private final Motor cameraPitchMotor;
-    private final Motor frontLeftMotor;
-    private final Motor frontRightMotor;
-    private final Motor rearLeftMotor;
-    private final Motor rearRightMotor;
     private double targetAltitude = 1.0;
     private double velocity = 1.0;
 
+    private final Set<Integer> recognizedObjectIds = new HashSet<>();
+
     public CustomDjiController() {
+        initializeComponents();
+    }
+
+    public void run() {
+
+        initMotors(velocity);
+
+        initKeyboard(timeStep);
+
+        System.out.println("Start the drone...");
+
+        waitBeforeStart();
+
+        displaySearchOptions();
+    }
+
+    private void initControlByKeyboard() {
+        final double kVerticalThrust = 68.5;
+        final double kVerticalOffset = 0.6;
+        final double kVerticalP = 3.0;
+        final double kRollP = 50.0;
+        final double kPitchP = 30.0;
+
+        printInstructions();
+
+        while (step(timeStep) != -1) {
+            double time = getTime();
+
+            double roll = imu.getRollPitchYaw()[0];
+            double pitch = imu.getRollPitchYaw()[1];
+            double altitude = gps.getValues()[2];
+            double rollVelocity = gyro.getValues()[0];
+            double pitchVelocity = gyro.getValues()[1];
+
+            setIntermittentFrontalLeds((int) time);
+
+            cameraRollMotor.setPosition(-0.115 * rollVelocity);
+            cameraPitchMotor.setPosition(-0.1 * pitchVelocity);
+
+            startRecognitionObjects();
+
+            KeyboardShortcut movementByKeyboards = getKeyboardShortcut();
+
+            double rollInput = kRollP * clamp(roll, -1.0, 1.0) + rollVelocity + movementByKeyboards.rollDisturbance();
+            double pitchInput = kPitchP * clamp(pitch, -1.0, 1.0) + pitchVelocity + movementByKeyboards.pitchDisturbance();
+            double yawInput = movementByKeyboards.yawDisturbance();
+            double clampedDifferenceAltitude = clamp(targetAltitude - altitude + kVerticalOffset, -1.0, 1.0);
+            double verticalInput = kVerticalP * Math.pow(clampedDifferenceAltitude, 3.0);
+
+            double frontLeftMotorInput = kVerticalThrust + verticalInput - rollInput + pitchInput - yawInput;
+            double frontRightMotorInput = kVerticalThrust + verticalInput + rollInput + pitchInput + yawInput;
+            double rearLeftMotorInput = kVerticalThrust + verticalInput - rollInput - pitchInput + yawInput;
+            double rearRightMotorInput = kVerticalThrust + verticalInput + rollInput - pitchInput - yawInput;
+
+            frontLeftMotor.setVelocity(frontLeftMotorInput);
+            frontRightMotor.setVelocity(-frontRightMotorInput);
+            rearLeftMotor.setVelocity(-rearLeftMotorInput);
+            rearRightMotor.setVelocity(rearRightMotorInput);
+        }
+    }
+
+    public void displaySearchOptions() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("---------------------------");
+        System.out.println("Select a search option:");
+        System.out.println("1. Manual drive");
+        System.out.println("2. Drive by instructions");
+
+        String input = scanner.nextLine();
+
+        switch (input) {
+            case "1":
+                System.out.println("Manual drive selected");
+                initControlByKeyboard();
+                break;
+            case "2":
+                System.out.println("Drive by instructions selected");
+                System.out.println("1. espiral");
+                System.out.println("2. barrido");
+                System.out.println("3. barrido con X uav");
+                break;
+            default:
+                System.out.println("Invalid option, select 1 or 2");
+                break;
+        }
+
+        scanner.close();
+    }
+
+    private KeyboardShortcut getKeyboardShortcut() {
+        double rollDisturbance = 0.0;
+        double pitchDisturbance = 0.0;
+        double yawDisturbance = 0.0;
+
+        int key = getKeyboard().getKey();
+        while (key > 0) {
+            switch (key) {
+                case Keyboard.UP:
+                    pitchDisturbance = -2.0;
+                    break;
+                case Keyboard.DOWN:
+                    pitchDisturbance = 2.0;
+                    break;
+                case Keyboard.RIGHT:
+                    yawDisturbance = -1.3;
+                    break;
+                case Keyboard.LEFT:
+                    yawDisturbance = 1.3;
+                    break;
+                case (Keyboard.SHIFT + Keyboard.RIGHT):
+                    rollDisturbance = -1.0;
+                    break;
+                case (Keyboard.SHIFT + Keyboard.LEFT):
+                    rollDisturbance = 1.0;
+                    break;
+                case (Keyboard.SHIFT + Keyboard.UP):
+                    targetAltitude += 0.05;
+                    System.out.println("target altitude: " + targetAltitude + " [m]");
+                    break;
+                case (Keyboard.SHIFT + Keyboard.DOWN):
+                    targetAltitude -= 0.05;
+                    System.out.println("target altitude: " + targetAltitude + " [m]");
+                    break;
+            }
+            key = getKeyboard().getKey();
+        }
+        return new KeyboardShortcut(rollDisturbance, pitchDisturbance, yawDisturbance);
+    }
+
+    private record KeyboardShortcut(double rollDisturbance, double pitchDisturbance, double yawDisturbance) {
+    }
+
+    private void startRecognitionObjects() {
+        int numberOfObjects = camera.getRecognitionNumberOfObjects();
+        var objects = camera.getRecognitionObjects();
+
+        for (int i = 0; i < numberOfObjects; i++) {
+            int objectId = objects[i].getId();
+            if (!recognizedObjectIds.contains(objectId)) {
+                recognizedObjectIds.add(objectId);
+                System.out.println("Model of object identified: " + objects[i].getModel());
+                System.out.println("Id of object: " + objectId);
+                System.out.println("Relative position of object: " + objects[i].getPosition()[0] + " " +
+                        objects[i].getPosition()[1] + " " + objects[i].getPosition()[2]);
+                System.out.println("Relative orientation of object: " + objects[i].getOrientation()[0] + " " +
+                        objects[i].getOrientation()[1] + " " + objects[i].getOrientation()[2] + " " + objects[i].getOrientation()[3]);
+                System.out.println("Size of object: " + objects[i].getSize()[0] + " " + objects[i].getSize()[1]);
+                System.out.println("Position of the object on the camera image: " + objects[i].getPositionOnImage()[0] + " " +
+                        objects[i].getPositionOnImage()[1]);
+                System.out.println("Size of the object on the camera image: " + objects[i].getSizeOnImage()[0] + " " +
+                        objects[i].getSizeOnImage()[1]);
+
+                // Play sound alert
+                // Speaker.playSound(speaker, speaker, "/Users/TFG/Documents/TFG/backend/dji-connection/src/main/resources/sounds/siren.wav", 1.0, 1.0, 0.0, true);
+
+                // Save the image of the recognized object
+                String filename = "object_" + objectId + ".jpg";
+                camera.saveImage(filename, 100);
+                System.out.println("Image saved as: " + filename);
+            }
+        }
+    }
+
+    private void initializeComponents() {
         camera = getCamera("camera");
         camera.enable(timeStep);
         camera.recognitionEnable(timeStep);
@@ -49,133 +221,26 @@ public class CustomDjiController extends CustomRobot {
         frontRightMotor = getMotor("front right propeller");
         rearLeftMotor = getMotor("rear left propeller");
         rearRightMotor = getMotor("rear right propeller");
+
+        // speaker = getSpeaker("speaker");
     }
 
-
-    public void run() {
-
-        initMotors(velocity);
-        initKeyboard(timeStep);
-
-        System.out.println("Start the drone...");
-
-        waitBeforeStart();
-
-        printInstructions();
-
-        final double kVerticalThrust = 68.5;
-        final double kVerticalOffset = 0.6;
-        final double kVerticalP = 3.0;
-        final double kRollP = 50.0;
-        final double kPitchP = 30.0;
-
-        while (step(timeStep) != -1) {
-            double time = getTime();
-
-            double roll = imu.getRollPitchYaw()[0];
-            double pitch = imu.getRollPitchYaw()[1];
-            double altitude = gps.getValues()[2];
-            double rollVelocity = gyro.getValues()[0];
-            double pitchVelocity = gyro.getValues()[1];
-
-            setItermitentFrontalLeds((int) time);
-
-            cameraRollMotor.setPosition(-0.115 * rollVelocity);
-            cameraPitchMotor.setPosition(-0.1 * pitchVelocity);
-
-            int numberOfObjects = camera.getRecognitionNumberOfObjects();
-
-            CameraRecognitionObject[] objects = camera.getRecognitionObjects();
-            for (int i = 0; i < numberOfObjects; i++) {
-                System.out.println("Model of object " + i + ": " + objects[i].getModel());
-                System.out.println("Id of object " + i + ": " + objects[i].getId());
-                System.out.println("Relative position of object " + i + ": " + objects[i].getPosition()[0] + " " +
-                        objects[i].getPosition()[1] + " " + objects[i].getPosition()[2]);
-                System.out.println("Relative orientation of object " + i + ": " + objects[i].getOrientation()[0] + " " +
-                        objects[i].getOrientation()[1] + " " + objects[i].getOrientation()[2] + " " + objects[i].getOrientation()[3]);
-                System.out.println("Size of object " + i + ": " + objects[i].getSize()[0] + " " + objects[i].getSize()[1]);
-                System.out.println("Position of the object " + i + " on the camera image: " + objects[i].getPositionOnImage()[0] + " " +
-                        objects[i].getPositionOnImage()[1]);
-                System.out.println("Size of the object " + i + " on the camera image: " + objects[i].getSizeOnImage()[0] + " " +
-                        objects[i].getSizeOnImage()[1]);
-                for (int j = 0; j < objects[i].getNumberOfColors(); j++) {
-                    int colorIndex = 3 * j;
-                    if (colorIndex + 2 < objects[i].getColors().length) {
-                        System.out.println("- Color " + (j + 1) + "/" + objects[i].getNumberOfColors() + ": " +
-                                objects[i].getColors()[colorIndex] + " " + objects[i].getColors()[colorIndex + 1] + " " + objects[i].getColors()[colorIndex + 2]);
-                    }
-                }
-            }
-
-            double rollDisturbance = 0.0;
-            double pitchDisturbance = 0.0;
-            double yawDisturbance = 0.0;
-            int key = getKeyboard().getKey();
-            while (key > 0) {
-                switch (key) {
-                    case Keyboard.UP:
-                        pitchDisturbance = -2.0;
-                        break;
-                    case Keyboard.DOWN:
-                        pitchDisturbance = 2.0;
-                        break;
-                    case Keyboard.RIGHT:
-                        yawDisturbance = -1.3;
-                        break;
-                    case Keyboard.LEFT:
-                        yawDisturbance = 1.3;
-                        break;
-                    case (Keyboard.SHIFT + Keyboard.RIGHT):
-                        rollDisturbance = -1.0;
-                        break;
-                    case (Keyboard.SHIFT + Keyboard.LEFT):
-                        rollDisturbance = 1.0;
-                        break;
-                    case (Keyboard.SHIFT + Keyboard.UP):
-                        targetAltitude += 0.05;
-                        System.out.println("target altitude: " + targetAltitude + " [m]");
-                        break;
-                    case (Keyboard.SHIFT + Keyboard.DOWN):
-                        targetAltitude -= 0.05;
-                        System.out.println("target altitude: " + targetAltitude + " [m]");
-                        break;
-                }
-                key = getKeyboard().getKey();
-            }
-
-            double rollInput = kRollP * clamp(roll, -1.0, 1.0) + rollVelocity + rollDisturbance;
-            double pitchInput = kPitchP * clamp(pitch, -1.0, 1.0) + pitchVelocity + pitchDisturbance;
-            double yawInput = yawDisturbance;
-            double clampedDifferenceAltitude = clamp(targetAltitude - altitude + kVerticalOffset, -1.0, 1.0);
-            double verticalInput = kVerticalP * Math.pow(clampedDifferenceAltitude, 3.0);
-
-            double frontLeftMotorInput = kVerticalThrust + verticalInput - rollInput + pitchInput - yawInput;
-            double frontRightMotorInput = kVerticalThrust + verticalInput + rollInput + pitchInput + yawInput;
-            double rearLeftMotorInput = kVerticalThrust + verticalInput - rollInput - pitchInput + yawInput;
-            double rearRightMotorInput = kVerticalThrust + verticalInput + rollInput - pitchInput - yawInput;
-            frontLeftMotor.setVelocity(frontLeftMotorInput);
-            frontRightMotor.setVelocity(-frontRightMotorInput);
-            rearLeftMotor.setVelocity(-rearLeftMotorInput);
-            rearRightMotor.setVelocity(rearRightMotorInput);
-        }
-    }
-
-    private void setItermitentFrontalLeds(int time) {
+    private void setIntermittentFrontalLeds(int time) {
         boolean ledState = time % 2 == 0;
         frontLeftLed.set(ledState ? 1 : 0);
         frontRightLed.set(ledState ? 0 : 1);
     }
 
     private static void printInstructions() {
-        System.out.println("You can control the drone with your computer keyboard:");
-        System.out.println("- 'up': move forward.");
-        System.out.println("- 'down': move backward.");
-        System.out.println("- 'right': turn right.");
-        System.out.println("- 'left': turn left.");
-        System.out.println("- 'shift + up': increase the target altitude.");
-        System.out.println("- 'shift + down': decrease the target altitude.");
-        System.out.println("- 'shift + right': strafe right.");
-        System.out.println("- 'shift + left': strafe left.");
+        System.out.println("You can control the drone with the keyboard:");
+        System.out.println("- 'up': move forward");
+        System.out.println("- 'down': move backward");
+        System.out.println("- 'right': turn right");
+        System.out.println("- 'left': turn left");
+        System.out.println("- 'shift + up': increase the target altitude");
+        System.out.println("- 'shift + down': decrease the target altitude");
+        System.out.println("- 'shift + right': strafe right");
+        System.out.println("- 'shift + left': strafe left");
     }
 
     private void waitBeforeStart() {
