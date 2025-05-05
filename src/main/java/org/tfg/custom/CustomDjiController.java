@@ -43,15 +43,274 @@ public class CustomDjiController extends CustomRobot {
 
     public void run() {
 
-        initMotors(velocity);
+        startDrone(velocity);
 
-        initKeyboard(timeStep);
+        // initKeyboard(timeStep);
 
         System.out.println("Start the drone...");
 
-        waitBeforeStart();
+        startRecognitionObjects();
 
-        displaySearchOptions();
+        // waitBeforeStart();
+//
+
+
+        up(1);
+        moveBack(2);
+        rotateLeft();
+
+        rotateLeft();
+        moveAhead(2);
+        rotateLeft();
+        moveAhead(2);
+        rotateLeft();
+        moveAhead(2);
+        down(0.9);
+    }
+
+    public void rotateRight() {
+        double yawDisturbance = -1.3;
+        applyYawDisturbanceForDuration(yawDisturbance, 1.15); // Gira durante 1.15 segundos
+    }
+
+    public void rotateLeft() {
+        double yawDisturbance = 1.3;
+        applyYawDisturbanceForDuration(yawDisturbance, 1.15); // Gira durante 1.15 segundos
+    }
+
+    private void applyYawDisturbanceForDuration(double yawDisturbance, double durationInSeconds) {
+        final double kVerticalThrust = 68.5;
+        final double kVerticalOffset = 0.6;
+        final double kVerticalP = 3.0;
+        final double kRollP = 50.0;
+        final double kPitchP = 30.0;
+
+        long endTime = System.currentTimeMillis() + (long) (durationInSeconds * 1000);
+
+        startRecognitionObjects();
+
+        while (System.currentTimeMillis() < endTime) {
+            if (step(timeStep) == -1) {
+                break;
+            }
+
+            double roll = imu.getRollPitchYaw()[0];
+            double pitch = imu.getRollPitchYaw()[1];
+            double altitude = gps.getValues()[2];
+            double rollVelocity = gyro.getValues()[0];
+            double pitchVelocity = gyro.getValues()[1];
+
+            double rollInput = kRollP * clamp(roll, -1.0, 1.0) + rollVelocity;
+            double pitchInput = kPitchP * clamp(pitch, -1.0, 1.0) + pitchVelocity;
+            double clampedDifferenceAltitude = clamp(targetAltitude - altitude + kVerticalOffset, -1.0, 1.0);
+            double verticalInput = kVerticalP * Math.pow(clampedDifferenceAltitude, 3.0);
+
+            double frontLeftMotorInput = kVerticalThrust + verticalInput - rollInput + pitchInput - yawDisturbance;
+            double frontRightMotorInput = kVerticalThrust + verticalInput + rollInput + pitchInput + yawDisturbance;
+            double rearLeftMotorInput = kVerticalThrust + verticalInput - rollInput - pitchInput + yawDisturbance;
+            double rearRightMotorInput = kVerticalThrust + verticalInput + rollInput - pitchInput - yawDisturbance;
+
+            frontLeftMotor.setVelocity(frontLeftMotorInput);
+            frontRightMotor.setVelocity(-frontRightMotorInput);
+            rearLeftMotor.setVelocity(-rearLeftMotorInput);
+            rearRightMotor.setVelocity(rearRightMotorInput);
+        }
+        hover(4); // Hover for 1 second to stabilize
+    }
+
+    public void up(double targetAltitude) {
+        this.targetAltitude = targetAltitude;
+        final double kVerticalThrust = 68.5;
+        final double kVerticalOffset = 0.6;
+        final double kVerticalP = 3.0;
+        final double kRollP = 50.0;
+        final double kPitchP = 30.0;
+
+        while (step(timeStep) != -1) {
+            startRecognitionObjects();
+            double roll = imu.getRollPitchYaw()[0];
+            double pitch = imu.getRollPitchYaw()[1];
+            double altitude = gps.getValues()[2];
+            double rollVelocity = gyro.getValues()[0];
+            double pitchVelocity = gyro.getValues()[1];
+
+            double rollInput = kRollP * clamp(roll, -1.0, 1.0) + rollVelocity;
+            double pitchInput = kPitchP * clamp(pitch, -1.0, 1.0) + pitchVelocity;
+            double clampedDifferenceAltitude = clamp(targetAltitude - altitude + kVerticalOffset, -1.0, 1.0);
+            double verticalInput = kVerticalP * Math.pow(clampedDifferenceAltitude, 3.0);
+
+            double frontLeftMotorInput = kVerticalThrust + verticalInput - rollInput + pitchInput;
+            double frontRightMotorInput = kVerticalThrust + verticalInput + rollInput + pitchInput;
+            double rearLeftMotorInput = kVerticalThrust + verticalInput - rollInput - pitchInput;
+            double rearRightMotorInput = kVerticalThrust + verticalInput + rollInput - pitchInput;
+
+            frontLeftMotor.setVelocity(frontLeftMotorInput);
+            frontRightMotor.setVelocity(-frontRightMotorInput);
+            rearLeftMotor.setVelocity(-rearLeftMotorInput);
+            rearRightMotor.setVelocity(rearRightMotorInput);
+
+            if (Math.abs(targetAltitude - altitude) < 0.1) {
+                break;
+            }
+        }
+        // Esperar un breve período para estabilizarse
+        long stabilizationTime = System.currentTimeMillis() + 1000; // 1 segundo
+        while (System.currentTimeMillis() < stabilizationTime) {
+            if (step(timeStep) == -1) {
+                break;
+            }
+        }
+
+        // Llamar a hover después de estabilizarse
+        hover(4);
+    }
+
+    public void down(double deltaAltitude) {
+        up(gps.getValues()[2] - deltaAltitude);
+    }
+
+    public void hover(double durationInSeconds) {
+        final double kVerticalThrust = 68.5;
+        final double kVerticalOffset = 0.6;
+        final double kVerticalP = 3.0;
+        final double kRollP = 50.0;
+        final double kPitchP = 30.0;
+
+        double targetAltitude = gps.getValues()[2]; // Maintain current altitude
+        long endTime = System.currentTimeMillis() + (long) (durationInSeconds * 1000);
+
+        while (System.currentTimeMillis() < endTime) {
+            if (step(timeStep) == -1) {
+                break;
+            }
+
+            double roll = imu.getRollPitchYaw()[0];
+            double pitch = imu.getRollPitchYaw()[1];
+            double altitude = gps.getValues()[2];
+            double rollVelocity = gyro.getValues()[0];
+            double pitchVelocity = gyro.getValues()[1];
+
+            double rollInput = kRollP * clamp(roll, -1.0, 1.0) + rollVelocity;
+            double pitchInput = kPitchP * clamp(pitch, -1.0, 1.0) + pitchVelocity;
+            double clampedDifferenceAltitude = clamp(targetAltitude - altitude + kVerticalOffset, -1.0, 1.0);
+            double verticalInput = kVerticalP * Math.pow(clampedDifferenceAltitude, 3.0);
+
+            double frontLeftMotorInput = kVerticalThrust + verticalInput - rollInput + pitchInput;
+            double frontRightMotorInput = kVerticalThrust + verticalInput + rollInput + pitchInput;
+            double rearLeftMotorInput = kVerticalThrust + verticalInput - rollInput - pitchInput;
+            double rearRightMotorInput = kVerticalThrust + verticalInput + rollInput - pitchInput;
+
+            frontLeftMotor.setVelocity(frontLeftMotorInput);
+            frontRightMotor.setVelocity(-frontRightMotorInput);
+            rearLeftMotor.setVelocity(-rearLeftMotorInput);
+            rearRightMotor.setVelocity(rearRightMotorInput);
+        }
+    }
+
+    public void moveAhead(double distance) {
+        final double kVerticalThrust = 68.5;
+        final double kVerticalOffset = 0.6;
+        final double kVerticalP = 3.0;
+        final double kRollP = 50.0;
+        final double kPitchP = 30.0;
+
+        double targetAltitude = gps.getValues()[2]; // Mantener la altitud actual
+        double speed = 1.0; // Velocidad en metros por segundo
+        double duration = distance / speed; // Tiempo para recorrer la distancia
+
+        long endTime = System.currentTimeMillis() + (long) (duration * 1000);
+
+        startRecognitionObjects();
+
+        while (System.currentTimeMillis() < endTime) {
+            if (step(timeStep) == -1) {
+                break;
+            }
+
+            double roll = imu.getRollPitchYaw()[0];
+            double pitch = imu.getRollPitchYaw()[1];
+            double altitude = gps.getValues()[2];
+            double rollVelocity = gyro.getValues()[0];
+            double pitchVelocity = gyro.getValues()[1];
+
+            double rollInput = kRollP * clamp(roll, -1.0, 1.0) + rollVelocity;
+            double pitchInput = kPitchP * clamp(pitch - 0.1, -1.0, 1.0) + pitchVelocity; // Inclinar hacia adelante
+            double clampedDifferenceAltitude = clamp(targetAltitude - altitude + kVerticalOffset, -1.0, 1.0);
+            double verticalInput = kVerticalP * Math.pow(clampedDifferenceAltitude, 3.0);
+
+            double frontLeftMotorInput = kVerticalThrust + verticalInput - rollInput + pitchInput;
+            double frontRightMotorInput = kVerticalThrust + verticalInput + rollInput + pitchInput;
+            double rearLeftMotorInput = kVerticalThrust + verticalInput - rollInput - pitchInput;
+            double rearRightMotorInput = kVerticalThrust + verticalInput + rollInput - pitchInput;
+
+            frontLeftMotor.setVelocity(frontLeftMotorInput);
+            frontRightMotor.setVelocity(-frontRightMotorInput);
+            rearLeftMotor.setVelocity(-rearLeftMotorInput);
+            rearRightMotor.setVelocity(rearRightMotorInput);
+        }
+        // Esperar un breve período para estabilizarse
+        long stabilizationTime = System.currentTimeMillis() + 1000; // 1 segundo
+        while (System.currentTimeMillis() < stabilizationTime) {
+            if (step(timeStep) == -1) {
+                break;
+            }
+        }
+
+        // Llamar a hover después de estabilizarse
+        hover(4);
+    }
+
+    public void moveBack(double distance) {
+        final double kVerticalThrust = 68.5;
+        final double kVerticalOffset = 0.6;
+        final double kVerticalP = 3.0;
+        final double kRollP = 50.0;
+        final double kPitchP = 30.0;
+
+        double targetAltitude = gps.getValues()[2]; // Maintain current altitude
+        double speed = 1.0; // Speed in meters per second
+        double duration = distance / speed; // Time to travel the distance
+
+        long endTime = System.currentTimeMillis() + (long) (duration * 1000);
+
+        while (System.currentTimeMillis() < endTime) {
+            if (step(timeStep) == -1) {
+                break;
+            }
+
+            double roll = imu.getRollPitchYaw()[0];
+            double pitch = imu.getRollPitchYaw()[1];
+            double altitude = gps.getValues()[2];
+            double rollVelocity = gyro.getValues()[0];
+            double pitchVelocity = gyro.getValues()[1];
+
+            startRecognitionObjects();
+
+            double rollInput = kRollP * clamp(roll, -1.0, 1.0) + rollVelocity;
+            double pitchInput = kPitchP * clamp(pitch + 0.1, -1.0, 1.0) + pitchVelocity; // Tilt backward
+            double clampedDifferenceAltitude = clamp(targetAltitude - altitude + kVerticalOffset, -1.0, 1.0);
+            double verticalInput = kVerticalP * Math.pow(clampedDifferenceAltitude, 3.0);
+
+            double frontLeftMotorInput = kVerticalThrust + verticalInput - rollInput + pitchInput;
+            double frontRightMotorInput = kVerticalThrust + verticalInput + rollInput + pitchInput;
+            double rearLeftMotorInput = kVerticalThrust + verticalInput - rollInput - pitchInput;
+            double rearRightMotorInput = kVerticalThrust + verticalInput + rollInput - pitchInput;
+
+            frontLeftMotor.setVelocity(frontLeftMotorInput);
+            frontRightMotor.setVelocity(-frontRightMotorInput);
+            rearLeftMotor.setVelocity(-rearLeftMotorInput);
+            rearRightMotor.setVelocity(rearRightMotorInput);
+        }
+        // Esperar un breve período para estabilizarse
+        long stabilizationTime = System.currentTimeMillis() + 1000; // 1 segundo
+        while (System.currentTimeMillis() < stabilizationTime) {
+            if (step(timeStep) == -1) {
+                break;
+            }
+        }
+
+        // Llamar a hover después de estabilizarse
+        hover(4);
     }
 
     private void initControlByKeyboard() {
@@ -190,8 +449,16 @@ public class CustomDjiController extends CustomRobot {
                 System.out.println("Size of the object on the camera image: " + objects[i].getSizeOnImage()[0] + " " +
                         objects[i].getSizeOnImage()[1]);
 
-                // Play sound alert
-                // Speaker.playSound(speaker, speaker, "/Users/TFG/Documents/TFG/backend/dji-connection/src/main/resources/sounds/siren.wav", 1.0, 1.0, 0.0, true);
+                // Play sound alert for 15 seconds
+                new Thread(() -> {
+                    Speaker.playSound(speaker, speaker, "/Users/TFG/Documents/TFG/backend/dji-connection/src/main/resources/sounds/siren.wav", 1.0, 1.0, 0.0, true);
+                    try {
+                        Thread.sleep(15000); // 15 seconds
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    speaker.stop(String.valueOf(speaker));
+                }).start();
 
                 // Save the image of the recognized object
                 String filename = "object_" + objectId + ".jpg";
@@ -222,7 +489,7 @@ public class CustomDjiController extends CustomRobot {
         rearLeftMotor = getMotor("rear left propeller");
         rearRightMotor = getMotor("rear right propeller");
 
-        // speaker = getSpeaker("speaker");
+        speaker = getSpeaker("speaker");
     }
 
     private void setIntermittentFrontalLeds(int time) {
@@ -259,11 +526,11 @@ public class CustomDjiController extends CustomRobot {
         return Math.max(low, Math.min(value, high));
     }
 
-    private void initKeyboard(int timeStep) {
+    public void initKeyboard(int timeStep) {
         getKeyboard().enable(timeStep);
     }
 
-    private void initMotors(double velocity) {
+    public void startDrone(double velocity) {
         this.velocity = velocity;
         Motor[] motors = {frontLeftMotor, frontRightMotor, rearLeftMotor, rearRightMotor};
         for (Motor motor : motors) {
