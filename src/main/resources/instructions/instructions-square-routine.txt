@@ -1,6 +1,5 @@
 start(1.5);
-initKeyboard(32);
-ascend(1.0);
+ascend(2.0);
 turnRight();
 forward(2.0);
 turnRight();
