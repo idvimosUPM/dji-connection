@@ -15,6 +15,7 @@ statement: runStatement
          | moveAheadStatement
          | moveBackStatement
          | logStatement // Logging
+         | assignmentStatement // Asigment
          ;
 
 // AtomE
@@ -34,16 +35,26 @@ moveBackStatement: ('backward' | 'retroceder') '(' DOUBLE ')' ';' ;
 // Logging
 logStatement: ('log' | 'imprimir') '(' expr ')' ';' ;
 
+// Asigment
+assignmentStatement: ID ASSIGN expr ';' ;
 
 
-DOUBLE: [0-9]+ '.' [0-9]+ ;
-INT: [0-9]+ ;
-WS: [ \t\r\n]+ -> skip ;
 
 expr: INT     #intExpr
     | DOUBLE  #doubleExpr
     | STRING  #stringExpr
+    | FLOAT   #floatExpr
+    | ID      #idExpr
     ;
 
+// Variables
 
 STRING : '"' (~["\r\n] | '""')* '"' ;
+DOUBLE: [0-9]+ '.' [0-9]+ ;
+FLOAT: [0-9]+ '.' [0-9]* | '.' [0-9]+ ;
+INT: [0-9]+ ;
+WS: [ \t\r\n]+ -> skip ;
+
+// Assigment variables
+ASSIGN : '=';
+ID : [a-zA-Z_] [a-zA-Z_0-9]* ;

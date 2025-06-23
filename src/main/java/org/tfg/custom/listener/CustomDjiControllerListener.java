@@ -4,12 +4,18 @@ import org.tfg.custom.CustomDjiController;
 import org.tfg.custom.gen.CustomDjiControllerBaseListener;
 import org.tfg.custom.gen.CustomDjiControllerParser;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class CustomDjiControllerListener extends CustomDjiControllerBaseListener {
 
     private final CustomDjiController controller;
 
+    private final Map<String, Object> variables;
+
     public CustomDjiControllerListener(CustomDjiController controller) {
         this.controller = controller;
+        this.variables = new HashMap<>();
     }
 
     @Override
@@ -80,34 +86,58 @@ public class CustomDjiControllerListener extends CustomDjiControllerBaseListener
         controller.moveBack(distance);
     }
 
+    // Logging
     @Override
     public void enterLogStatement(CustomDjiControllerParser.LogStatementContext ctx) {
-        // Obtenemos el contexto genérico de la expresión
-        CustomDjiControllerParser.ExprContext exprCtx = ctx.expr();
+        Object valueToLog = evaluateExpression(ctx.expr());
 
-        // Verificamos qué tipo de expresión concreta se ha encontrado
+        if (valueToLog != null) {
+            controller.log(valueToLog);
+        } else {
+            controller.log("ERROR: value to log cannot be resolved.");
+        }
+    }
+
+    // Assignment
+    @Override
+    public void enterAssignmentStatement(CustomDjiControllerParser.AssignmentStatementContext ctx) {
+        String variableName = ctx.ID().getText();
+        Object value = evaluateExpression(ctx.expr());
+
+        if (value != null) {
+            variables.put(variableName, value);
+        } else {
+            controller.log("ERROR: Assigment failed in variable '" + variableName + "'.");
+        }
+    }
+
+    private Object evaluateExpression(CustomDjiControllerParser.ExprContext exprCtx) {
+        if (exprCtx == null) {
+            return null;
+        }
+
         if (exprCtx instanceof CustomDjiControllerParser.IntExprContext) {
-            // Si es un entero
-            CustomDjiControllerParser.IntExprContext intExprContext = (CustomDjiControllerParser.IntExprContext) exprCtx; // Casteamos al tipo específico
-            int value = Integer.parseInt(intExprContext.INT().getText());
-            controller.log(value);
+            return Integer.parseInt(((CustomDjiControllerParser.IntExprContext) exprCtx).INT().getText());
         } else if (exprCtx instanceof CustomDjiControllerParser.DoubleExprContext) {
-            // Si es un double
-            CustomDjiControllerParser.DoubleExprContext doubleExprContext = (CustomDjiControllerParser.DoubleExprContext) exprCtx; // Casteamos al tipo específico
-            double value = Double.parseDouble(doubleExprContext.DOUBLE().getText());
-            controller.log(value);
+            return Double.parseDouble(((CustomDjiControllerParser.DoubleExprContext) exprCtx).DOUBLE().getText());
+        } else if (exprCtx instanceof CustomDjiControllerParser.FloatExprContext) {
+            return Double.parseDouble(((CustomDjiControllerParser.FloatExprContext) exprCtx).FLOAT().getText());
         } else if (exprCtx instanceof CustomDjiControllerParser.StringExprContext) {
-            // Si es un string
-            CustomDjiControllerParser.StringExprContext stringExprContext = (CustomDjiControllerParser.StringExprContext) exprCtx; // Casteamos al tipo específico
-            String value = stringExprContext.STRING().getText();
-            // Los strings vienen con las comillas, las quitamos para la impresión
-            if (value.startsWith("\"") && value.endsWith("\"")) {
+            String value = ((CustomDjiControllerParser.StringExprContext) exprCtx).STRING().getText();
+            if (value.length() >= 2 && value.startsWith("\"") && value.endsWith("\"")) {
                 value = value.substring(1, value.length() - 1);
             }
-            controller.log(value);
-        } else {
-            // Esto no debería ocurrir si la gramática está bien definida y cubre todos los casos de 'expr'
-            System.err.println("Error: Tipo de expresión no reconocido en logStatement.");
+            return value;
+        } else if (exprCtx instanceof CustomDjiControllerParser.IdExprContext) {
+            String varName = ((CustomDjiControllerParser.IdExprContext) exprCtx).ID().getText();
+            if (variables.containsKey(varName)) {
+                return variables.get(varName);
+            } else {
+                controller.log("ERROR: Variable '" + varName + "' not defined.");
+                return null;
+            }
         }
+        controller.log("Error: Not recognized expression. Contexto: " + exprCtx.getClass().getName());
+        return null;
     }
 }
