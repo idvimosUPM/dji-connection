@@ -16,18 +16,18 @@ statement: runStatement
          | moveBackStatement
          ;
 
-runStatement: 'initManualDrive' ';' ;
-initKeyboardStatement: 'initKeyboard' '(' INT ')' ';' ;
-displaySearchOptionsStatement: 'displaySearchOptions' ';' ;
-setTargetAltitudeStatement: 'setTargetAltitude' '(' DOUBLE ')' ';' ;
-startDroneStatement: 'start' '(' DOUBLE ')' ';' ;
-hoverStatement: 'hold' '(' DOUBLE ')' ';' ;
-upStatement: 'ascend' '(' DOUBLE ')' ';' ;
-downStatement: 'descend' '(' DOUBLE ')' ';' ;
-rotateRightStatement: 'turnRight' ';' ;
-rotateLeftStatement: 'turnLeft' ';' ;
-moveAheadStatement: 'forward' '(' DOUBLE ')' ';' ;
-moveBackStatement: 'backward' '(' DOUBLE ')' ';' ;
+runStatement: ('initManualDrive' | 'iniciarConduccionManual') ';' ;
+initKeyboardStatement: ('initKeyboard' | 'iniciarTeclado') '(' INT ')' ';' ;
+displaySearchOptionsStatement: ('displaySearchOptions' | 'mostrarOpcionesDeBusqueda') ';' ;
+setTargetAltitudeStatement: ('setTargetAltitude' | 'establecerAltitudObjetivo') '(' DOUBLE ')' ';' ;
+startDroneStatement: ('start' | 'iniciar') '(' DOUBLE ')' ';' ;
+hoverStatement: ('hold' | 'mantener') '(' DOUBLE ')' ';' ;
+upStatement: ('ascend' | 'ascender') '(' DOUBLE ')' ';' ;
+downStatement: ('descend' | 'descender') '(' DOUBLE ')' ';' ;
+rotateRightStatement: ('turnRight' | 'girarDerecha') ';' ;
+rotateLeftStatement: ('turnLeft' | 'girarIzquierda') ';' ;
+moveAheadStatement: ('forward' | 'moverseAdelante') '(' DOUBLE ')' ';' ;
+moveBackStatement: ('backward' | 'moverseAtras') '(' DOUBLE ')' ';' ;
 
 DOUBLE: [0-9]+ '.' [0-9]+ ;
 INT: [0-9]+ ;
