@@ -16,7 +16,7 @@ statement: runStatement
          | moveBackStatement
          ;
 
-runStatement: ('initManualDrive' | 'iniciarConduccionManual') ';' ;
+runStatement: ('initManualDrive' | 'habilitarControlManual') ';' ;
 initKeyboardStatement: ('initKeyboard' | 'iniciarTeclado') '(' INT ')' ';' ;
 displaySearchOptionsStatement: ('displaySearchOptions' | 'mostrarOpcionesDeBusqueda') ';' ;
 setTargetAltitudeStatement: ('setTargetAltitude' | 'establecerAltitudObjetivo') '(' DOUBLE ')' ';' ;
@@ -26,8 +26,8 @@ upStatement: ('ascend' | 'ascender') '(' DOUBLE ')' ';' ;
 downStatement: ('descend' | 'descender') '(' DOUBLE ')' ';' ;
 rotateRightStatement: ('turnRight' | 'girarDerecha') ';' ;
 rotateLeftStatement: ('turnLeft' | 'girarIzquierda') ';' ;
-moveAheadStatement: ('forward' | 'moverseAdelante') '(' DOUBLE ')' ';' ;
-moveBackStatement: ('backward' | 'moverseAtras') '(' DOUBLE ')' ';' ;
+moveAheadStatement: ('forward' | 'avanzar') '(' DOUBLE ')' ';' ;
+moveBackStatement: ('backward' | 'retroceder') '(' DOUBLE ')' ';' ;
 
 DOUBLE: [0-9]+ '.' [0-9]+ ;
 INT: [0-9]+ ;

@@ -23,7 +23,7 @@ public class Main {
         CustomDjiController controller = new CustomDjiController();
 
         // Instructions file uploaded
-        String code = new String(Files.readAllBytes(Paths.get("/Users/TFG/Documents/TFG/backend/dji-connection/src/main/resources/instructions/instructions-square-routine-spanish.txt")));
+        String code = new String(Files.readAllBytes(Paths.get("/Users/TFG/Documents/TFG/backend/dji-connection/src/main/resources/instructions/instructions-manual-drive-spanish.txt")));
 
         // Lexer and Parser
         CustomDjiControllerLexer lexer = new CustomDjiControllerLexer(CharStreams.fromString(code));
