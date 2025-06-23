@@ -43,29 +43,14 @@ public class CustomDjiController extends CustomRobot {
 
     public void run() {
 
-        startDrone(velocity);
-
-        // initKeyboard(timeStep);
-
         System.out.println("Start the drone...");
 
+        startDrone(velocity);
         startRecognitionObjects();
+        waitBeforeStart();
+        initKeyboard(timeStep);
+        initControlByKeyboard();
 
-        // waitBeforeStart();
-//
-
-
-        up(1);
-        moveBack(2);
-        rotateLeft();
-
-        rotateLeft();
-        moveAhead(2);
-        rotateLeft();
-        moveAhead(2);
-        rotateLeft();
-        moveAhead(2);
-        down(0.9);
     }
 
     public void rotateRight() {
@@ -374,9 +359,6 @@ public class CustomDjiController extends CustomRobot {
                 break;
             case "2":
                 System.out.println("Drive by instructions selected");
-                System.out.println("1. espiral");
-                System.out.println("2. barrido");
-                System.out.println("3. barrido con X uav");
                 break;
             default:
                 System.out.println("Invalid option, select 1 or 2");
