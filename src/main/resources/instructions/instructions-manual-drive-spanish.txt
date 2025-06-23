@@ -1,0 +1,2 @@
+iniciar(1.5);
+iniciarConduccionManual();
