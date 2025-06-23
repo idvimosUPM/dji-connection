@@ -79,4 +79,35 @@ public class CustomDjiControllerListener extends CustomDjiControllerBaseListener
         double distance = Double.parseDouble(ctx.DOUBLE().getText());
         controller.moveBack(distance);
     }
+
+    @Override
+    public void enterLogStatement(CustomDjiControllerParser.LogStatementContext ctx) {
+        // Obtenemos el contexto genérico de la expresión
+        CustomDjiControllerParser.ExprContext exprCtx = ctx.expr();
+
+        // Verificamos qué tipo de expresión concreta se ha encontrado
+        if (exprCtx instanceof CustomDjiControllerParser.IntExprContext) {
+            // Si es un entero
+            CustomDjiControllerParser.IntExprContext intExprContext = (CustomDjiControllerParser.IntExprContext) exprCtx; // Casteamos al tipo específico
+            int value = Integer.parseInt(intExprContext.INT().getText());
+            controller.log(value);
+        } else if (exprCtx instanceof CustomDjiControllerParser.DoubleExprContext) {
+            // Si es un double
+            CustomDjiControllerParser.DoubleExprContext doubleExprContext = (CustomDjiControllerParser.DoubleExprContext) exprCtx; // Casteamos al tipo específico
+            double value = Double.parseDouble(doubleExprContext.DOUBLE().getText());
+            controller.log(value);
+        } else if (exprCtx instanceof CustomDjiControllerParser.StringExprContext) {
+            // Si es un string
+            CustomDjiControllerParser.StringExprContext stringExprContext = (CustomDjiControllerParser.StringExprContext) exprCtx; // Casteamos al tipo específico
+            String value = stringExprContext.STRING().getText();
+            // Los strings vienen con las comillas, las quitamos para la impresión
+            if (value.startsWith("\"") && value.endsWith("\"")) {
+                value = value.substring(1, value.length() - 1);
+            }
+            controller.log(value);
+        } else {
+            // Esto no debería ocurrir si la gramática está bien definida y cubre todos los casos de 'expr'
+            System.err.println("Error: Tipo de expresión no reconocido en logStatement.");
+        }
+    }
 }

@@ -1,2 +1,3 @@
+log (123434);
 iniciar(1.5);
 habilitarControlManual();

@@ -520,4 +520,8 @@ public class CustomDjiController extends CustomRobot {
             motor.setVelocity(velocity);
         }
     }
+
+    public void log(Object value) {
+        System.out.println("[AtomE Log]: " + value);
+    }
 }
