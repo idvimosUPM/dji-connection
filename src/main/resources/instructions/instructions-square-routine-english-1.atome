@@ -1,0 +1,35 @@
+# Prueba 1: Rutina de vuelo formando un cuadrado con instrucciones AtomE en inglés
+
+log("--- START PROBE 1: Square routine flight ---");
+
+velocity = 1.5;
+sideDistance = 3.0;
+remainingSides = 4;
+targetAltitude = 5.0;
+
+start(velocity);
+ascend(targetAltitude);
+log("The drone ascends " + targetAltitude + " metros.");
+
+while remainingSides > 0 {
+    log("Current side #" + (5 - remainingSides) + "...");
+
+    forward(sideDistance);
+
+    log("The drone has moved " + sideDistance + " meters forward.");
+
+    if remainingSides > 1 {
+        turnRight();
+        log("The drone turned to the right.");
+    }
+
+    remainingSides = remainingSides - 1;
+}
+
+log("--- Square routine completed. ---");
+log("--- Starting descent ---");
+
+descend(targetAltitude - 0.3); # Se desciende ligeramente menos para evitar colisiones al aterrizar
+
+log("The drone is landed.");
+log("--- END OF PROBE 1 ---");

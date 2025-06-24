@@ -1,4 +1,4 @@
-log (123434);
+log(123434);
 velocidadInicial = 10;
 log(velocidadInicial);
 iniciar(1.5);
