@@ -2,10 +2,9 @@ package org.tfg.custom;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import org.tfg.custom.executor.CustomDjiControllerExecutor;
 import org.tfg.custom.gen.CustomDjiControllerLexer;
 import org.tfg.custom.gen.CustomDjiControllerParser;
-import org.tfg.custom.listener.CustomDjiControllerListener;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,20 +22,19 @@ public class Main {
         CustomDjiController controller = new CustomDjiController();
 
         // Instructions file uploaded
-        String code = new String(Files.readAllBytes(Paths.get("/Users/TFG/Documents/TFG/backend/dji-connection/src/main/resources/instructions/instructions-manual-drive-spanish.txt")));
+        String code = new String(Files.readAllBytes(Paths.get("/Users/TFG/Documents/TFG/backend/dji-connection/src/main/resources/instructions/instructions-square-routine-english-1.txt")));
 
         // Lexer and Parser
         CustomDjiControllerLexer lexer = new CustomDjiControllerLexer(CharStreams.fromString(code));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         CustomDjiControllerParser parser = new CustomDjiControllerParser(tokens);
 
-        // Parsing
+        // Parsing: Obtains the ParseTree
         CustomDjiControllerParser.ProgramContext tree = parser.program();
 
-        // Listener
-        ParseTreeWalker walker = new ParseTreeWalker();
-        CustomDjiControllerListener listener = new CustomDjiControllerListener(controller);
-        walker.walk(listener, tree);
+        // Visitor
+        CustomDjiControllerExecutor executor = new CustomDjiControllerExecutor(controller);
+        executor.visit(tree);
 
         // Stop Webots
         stopWebots();
