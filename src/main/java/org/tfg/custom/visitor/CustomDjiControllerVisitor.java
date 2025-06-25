@@ -188,12 +188,8 @@ public class CustomDjiControllerVisitor extends CustomDjiControllerBaseVisitor<V
             }
         }
 
-        if (!evaluatedBlock && ctx.ELSE() != null) {
-            CustomDjiControllerParser.Stat_blockContext elseBlock = ctx.stat_block();
-
-            if (elseBlock != null) {
-                this.visit(elseBlock);
-            }
+        if (!evaluatedBlock && ctx.stat_block() != null) {
+            this.visit(ctx.stat_block());
         }
         return Value.VOID;
     }

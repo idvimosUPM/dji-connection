@@ -1,6 +1,6 @@
 # Prueba 2: Rutina de vuelo formando un cuadrado con instrucciones AtomE en español
 
-log("--- INICIO PRUEBA 2: Rutina de vuelo formando un cuadrado ---");
+imprimir("--- INICIO PRUEBA 2: Rutina de vuelo formando un cuadrado ---");
 
 velidadInicial = 1.5;
 distanciaLado = 3.0;
@@ -9,18 +9,18 @@ alturaObjetivo = 5.0;
 
 iniciar(velidadInicial);
 ascender(alturaObjetivo);
-log("El dron ha ascendido a " + alturaObjetivo + " metros.");
+imprimir("El dron ha ascendido a " + alturaObjetivo + " metros.");
 
-while ladosRestantes > 0 {
-    log("Recorriendo lado #" + (5 - ladosRestantes) + "...");
+mientras ladosRestantes > 0 {
+    imprimir("Recorriendo lado #" + (5 - ladosRestantes) + "...");
 
     avanzar(distanciaLado);
 
-    log("El dron se ha desplazado " + distanciaLado + " metros hacia adelante.");
+    imprimir("El dron se ha desplazado " + distanciaLado + " metros hacia adelante.");
 
-    if ladosRestantes > 1 {
+    si ladosRestantes > 1 {
         girarDerecha();
-        log("El dron ha girado a la derecha.");
+        imprimir("El dron ha girado a la derecha.");
     }
 
     ladosRestantes = ladosRestantes - 1;
@@ -28,10 +28,10 @@ while ladosRestantes > 0 {
 
 mantener(3.0); # Mantiene la posición antes de descender
 
-log("--- Rutina de cuadrado completada. ---");
-log("--- Iniciando descenso ---");
+imprimir("--- Rutina de cuadrado completada. ---");
+imprimir("--- Iniciando descenso ---");
 
 descender(alturaObjetivo - 0.25); # Se desciende ligeramente menos para evitar colisiones al aterrizar
 
-log("El dron ha aterrizado.");
-log("--- FIN PRUEBA 2 ---");
+imprimir("El dron ha aterrizado.");
+imprimir("--- FIN PRUEBA 2 ---");

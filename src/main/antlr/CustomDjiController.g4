@@ -38,17 +38,11 @@ rotateRightStatement: ('turnRight' | 'girarDerecha') '(' ')' ';' ;
 rotateLeftStatement: ('turnLeft' | 'girarIzquierda') '(' ')' ';' ;
 moveAheadStatement: ('forward' | 'avanzar') '(' expr ')' ';' ;
 moveBackStatement: ('backward' | 'retroceder') '(' expr ')' ';' ;
+logStatement: ('log' | 'imprimir') expr ';' ; // Logging
+assignmentStatement: ID ASSIGN expr ';' ; // Assignment
+if_stat: ('if' | 'si') condition_block (('else if' | 'sino si') condition_block)* (('else' | 'sino') stat_block)? ; // IF
+while_stat: ('while' | 'mientras') expr stat_block ; //  WHILE
 
-// Logging
-logStatement: LOG expr ';' ;
-
-// Asignación
-assignmentStatement: ID ASSIGN expr ';' ;
-
-// IF
-if_stat
- : IF condition_block (ELSE IF condition_block)* (ELSE stat_block)?
- ;
 
 condition_block
  : expr stat_block
@@ -57,11 +51,6 @@ condition_block
 stat_block
  : '{' block '}'
  | stat
- ;
-
-//  WHILE
-while_stat
- : WHILE expr stat_block
  ;
 
 // expression's rule
@@ -109,10 +98,6 @@ ASSIGN : '=';
 TRUE : 'true';
 FALSE : 'false';
 NIL : 'nil';
-IF : 'if';
-ELSE : 'else';
-WHILE : 'while';
-LOG : 'log';
 
 ID
  : [a-zA-Z_] [a-zA-Z_0-9]*
