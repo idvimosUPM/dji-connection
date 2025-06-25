@@ -1,4 +1,4 @@
-package org.tfg.custom.executor;
+package org.tfg.custom.visitor;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.tfg.custom.CustomDjiController;
@@ -10,14 +10,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CustomDjiControllerExecutor extends CustomDjiControllerBaseVisitor<Value> {
+public class CustomDjiControllerVisitor extends CustomDjiControllerBaseVisitor<Value> {
 
     public static final double SMALL_VALUE = 0.00000000001;
 
     private final CustomDjiController controller;
     private final Map<String, Value> variables;
 
-    public CustomDjiControllerExecutor(CustomDjiController controller) {
+    public CustomDjiControllerVisitor(CustomDjiController controller) {
         this.controller = controller;
         this.variables = new HashMap<>();
     }

@@ -2,9 +2,9 @@ package org.tfg.custom;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.tfg.custom.executor.CustomDjiControllerExecutor;
 import org.tfg.custom.gen.CustomDjiControllerLexer;
 import org.tfg.custom.gen.CustomDjiControllerParser;
+import org.tfg.custom.visitor.CustomDjiControllerVisitor;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,8 +33,8 @@ public class Main {
         CustomDjiControllerParser.ProgramContext tree = parser.program();
 
         // Visitor
-        CustomDjiControllerExecutor executor = new CustomDjiControllerExecutor(controller);
-        executor.visit(tree);
+        CustomDjiControllerVisitor visitor = new CustomDjiControllerVisitor(controller);
+        visitor.visit(tree);
 
         // Stop Webots
         stopWebots();
