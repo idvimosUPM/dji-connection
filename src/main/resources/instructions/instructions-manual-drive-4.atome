@@ -1,2 +1,9 @@
-start(1.5);
-initManualDrive();
+# Prueba 4: El dron es manejado mediante teclado
+
+imprimir("--- INICIO PRUEBA 4: Control manual ---");
+
+iniciar(1.5);
+habilitarControlManual();
+
+imprimir("El dron ha aterrizado.");
+imprimir("--- FIN PRUEBA 4 ---");
