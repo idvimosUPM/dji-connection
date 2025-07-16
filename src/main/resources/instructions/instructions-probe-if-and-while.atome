@@ -1,0 +1,95 @@
+# Programa de prueba para IF y WHILE
+# Puedes descomentar las secciones para probarlas individualmente
+
+# Sección de prueba de Variables y LOG (para asegurar que las expresiones funcionan)
+log("Iniciando prueba de control de flujo.");
+var_test = 10;
+log("Valor de var_test: " + var_test);
+log("Resultado de 5 + 3 * 2: " + (5 + 3 * 2));
+log("Resultado de 10 > 5 && true: " + (10 > 5 && true));
+
+
+# --- Prueba de IF/ELSE IF/ELSE ---
+log("--- Prueba IF/ELSE IF/ELSE ---");
+miNumero = 15;
+
+if miNumero == 10 {
+    log("miNumero es 10.");
+} else if miNumero < 10 {
+    log("miNumero es menor que 10.");
+} else {
+    log("miNumero es mayor que 10.");
+}
+
+miBool = true;
+if miBool {
+    log("miBool es verdadero.");
+} else {
+    log("miBool es falso.");
+}
+
+# Prueba con expresión compleja
+edad = 25;
+tieneCarnet = true;
+if edad >= 18 && tieneCarnet == true {
+    log("Puede conducir.");
+} else {
+    log("No puede conducir.");
+}
+
+# Prueba de IF anidado
+x = 5;
+if x > 0 {
+    log("X es positivo.");
+    if x < 10 {
+        log("X es un dígito.");
+    } else {
+        log("X es un número grande.");
+    }
+} else {
+    log("X no es positivo.");
+}
+
+
+# --- Prueba de WHILE ---
+log("--- Prueba WHILE ---");
+contador = 0;
+while contador < 5 {
+    log("Contador: " + contador);
+    contador = contador + 1; # Incrementar el contador
+}
+log("Bucle WHILE terminado. Contador final: " + contador);
+
+# Otro ejemplo de WHILE con condición más compleja
+suma = 0;
+i = 1;
+while i <= 3 {
+    log("Sumando: " + i);
+    suma = suma + i;
+    i = i + 1;
+}
+log("Suma total: " + suma);
+
+
+# --- Prueba combinada (IF dentro de WHILE) ---
+log("--- Prueba Combinada: IF dentro de WHILE ---");
+j = 0;
+while j < 4 {
+    log("Iteración del bucle (j): " + j);
+    if j % 2 == 0 { # j es par
+        log("  j es par.");
+    } else {
+        log("  j es impar.");
+    }
+    j = j + 1;
+}
+log("Fin de prueba combinada.");
+
+
+# Comando de dron (para asegurar que siguen funcionando)
+# initManualDrive;
+# ascender(10.5);
+# hold(2.0);
+# descend(5.0);
+# girarDerecha();
+log("Programa AtomE terminado.");

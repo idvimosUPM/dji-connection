@@ -1,5 +1,6 @@
 plugins {
     application
+    antlr
 }
 
 group = "org.connection-guide"
@@ -17,6 +18,14 @@ dependencies {
     // Dependencias de JUnit (solo si las estás utilizando para pruebas)
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+
+    // Dependencia de Lombok
+    compileOnly("org.projectlombok:lombok:1.18.28")
+    annotationProcessor("org.projectlombok:lombok:1.18.28")
+
+    // Dependencias de ANTLR
+    implementation("org.antlr:antlr4-runtime:4.13.2")
+    antlr("org.antlr:antlr4:4.13.2")
 }
 
 application {
@@ -29,4 +38,25 @@ application {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.withType<AntlrTask> {
+    arguments.addAll(listOf("-visitor", "-listener"))
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir("src/main/antlr")
+        }
+    }
+}
+
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+    dependsOn(tasks.named("generateGrammarSource"))
+}
+
+tasks.named("compileJava") {
+    dependsOn(tasks.named("generateGrammarSource"))
 }

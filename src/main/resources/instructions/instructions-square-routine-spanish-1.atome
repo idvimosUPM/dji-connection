@@ -1,0 +1,37 @@
+# Prueba 2: Rutina de vuelo formando un cuadrado con instrucciones AtomE en español
+
+imprimir("--- INICIO PRUEBA 2: Rutina de vuelo formando un cuadrado ---");
+
+velidadInicial = 1.5;
+distanciaLado = 3.0;
+ladosRestantes = 4;
+alturaObjetivo = 5.0;
+
+iniciar(velidadInicial);
+ascender(alturaObjetivo);
+imprimir("El dron ha ascendido a " + alturaObjetivo + " metros.");
+
+mientras ladosRestantes > 0 {
+    imprimir("Recorriendo lado #" + (5 - ladosRestantes) + "...");
+
+    avanzar(distanciaLado);
+
+    imprimir("El dron se ha desplazado " + distanciaLado + " metros hacia adelante.");
+
+    si ladosRestantes > 1 {
+        girarDerecha();
+        imprimir("El dron ha girado a la derecha.");
+    }
+
+    ladosRestantes = ladosRestantes - 1;
+}
+
+mantener(3.0); # Mantiene la posición antes de descender
+
+imprimir("--- Rutina de cuadrado completada. ---");
+imprimir("--- Iniciando descenso ---");
+
+descender(alturaObjetivo - 0.25); # Se desciende ligeramente menos para evitar colisiones al aterrizar
+
+imprimir("El dron ha aterrizado.");
+imprimir("--- FIN PRUEBA 2 ---");

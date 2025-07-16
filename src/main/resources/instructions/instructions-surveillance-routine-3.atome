@@ -1,0 +1,34 @@
+# Prueba 3: El dron realiza un reconocimento que consiste en ascender una determinada altura, realizar un barrido
+# con la cámara mediante 4 giros y volver a descender.,
+
+imprimir("--- INICIO PRUEBA 3: Reconocimiento ---");
+
+altitudInicial = 10.0;
+velocidadInicial = 5.0;
+numeroGiros = 4.0;
+
+imprimir("DEBUG: Altitud inicial: " + altitudInicial + "m, numero de giros: " + numeroGiros);
+
+iniciar(velocidadInicial);
+ascender(altitudInicial);
+imprimir("Dron en altitud: " + altitudInicial + "m. Se procede a hacer un barrido con la camara.");
+
+totalGiros = numeroGiros;
+mientras totalGiros > 0 {
+    imprimir("Giros restantes para aterrizar: " + totalGiros + "...");
+
+    mantener(1.0);
+    totalGiros = totalGiros - 1;
+    girarIzquierda();
+
+}
+
+mantener(2.0);
+
+imprimir("--- Iniciando descenso ---");
+
+descender(altitudInicial-0.05); # Se desciende ligeramente menos para evitar colisiones al aterrizar
+mantener(1.0);
+
+imprimir("El dron ha aterrizado.");
+imprimir("--- FIN PRUEBA 3 ---");
